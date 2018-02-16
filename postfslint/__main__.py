@@ -9,7 +9,6 @@ from enum import Enum
 import argparse
 import logging
 import itertools
-from ruamel.yaml import YAML
 from distutils import spawn  # for find_executable
 import subprocess
 
@@ -247,17 +246,21 @@ class DupList(object):
             match = re.match('-{5,}(.*)\n?', line)
             if match:
                 # new section
-                if sectionname is not None:
+                if section or sectionname:
                     sections[sectionname] = section
                 sectionname = match.group(1)
                 section = []
             else:
                 section.append(line)
+        if section or sectionname:
+            sections[sectionname] = section
         return sections
 
     @staticmethod
     def fslint_duplist(sections):
         dupsection = "DUPlicate files"
+        if dupsection not in sections:
+            dupsection = None  # Fall back to top section
         dups = [Action(ActionType.UNKNOWN, paths.split('\n')) for paths in "".join(sections[dupsection]).strip().split("\n\n")]
         return dups
 
@@ -331,7 +334,7 @@ class DupList(object):
             dup.apply()
 
 
-if __name__ == "__main__":
+def main(args=None):
     parser = argparse.ArgumentParser(description='')
     parser.add_argument("-f", "--fslint", help="fslint file to parse",
                         type=argparse.FileType('r'))
@@ -345,7 +348,7 @@ if __name__ == "__main__":
                         type=argparse.FileType('w'))
     parser.add_argument("-v", "--verbose", help="Long messages",
         dest="verbose", default=False, action="store_true")
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG if args.verbose else logging.INFO)
 
@@ -370,3 +373,7 @@ if __name__ == "__main__":
     # Write output
     if args.out:
         duplist.write(args.out)
+
+
+if __name__ == "__main__":
+    main()

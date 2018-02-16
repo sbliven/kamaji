@@ -95,7 +95,7 @@ class Action(object):
         fields = line.split('\t')
         return Action(*fields)
 
-    def apply(self):
+    def apply(self, dryrun=False):
         """Apply action
 
         Return: (bool) whether the action was successful
@@ -109,9 +109,15 @@ class Action(object):
         if not os.path.isfile(self.path):
             raise IOError("Unable to %s '%s' (file not found)" % (self.type.name, self.path))
         if self.type is ActionType.DELETE:
-            return delete(self.path)
+            if dryrun:
+                logging.info("Deleting %s", self.path)
+            else:
+                return delete(self.path)
         elif self.type is ActionType.RENAME:
-            return rename(self.path, self.args[0])
+            if dryrun:
+                logging.info("Renaming %s to %s", self.path, self.args[0])
+            else:
+                return rename(self.path, self.args[0])
         else:
             raise Exception("Unimplemented Action")
 
@@ -164,12 +170,12 @@ class DupGroup(UserList):
     def __str__(self):
         return "\n".join(str(a) for a in self)
 
-    def apply(self):
+    def apply(self, dryrun=False):
         """Apply actions"""
         for action in self:
             allworked = True
             try:
-                allworked = allworked and action.apply()
+                allworked = allworked and action.apply(dryrun)
             except Exception as ex:
                 logging.error(ex)
 
@@ -329,10 +335,10 @@ class DupList(UserList):
         for dup in self:
             dup.annotate(rules)
 
-    def apply(self):
+    def apply(self, dryrun=False):
         """Apply actions"""
         for dup in self:
-            dup.apply()
+            dup.apply(dryrun)
 
 def main(args=None):
     parser = argparse.ArgumentParser(description='')
@@ -347,6 +353,8 @@ def main(args=None):
     parser.add_argument("-o", "--out", help="write tsv of duplicates with suggested actions",
                         type=argparse.FileType('w'))
     parser.add_argument("-K", "--nokeeps", help="Filter all-KEEP groups of duplicates",
+                        action="store_true", default=False)
+    parser.add_argument("-n", "--dryrun", help="with --apply, don't actually do anything but just print log statements",
                         action="store_true", default=False)
     parser.add_argument("-v", "--verbose", help="Long messages",
         dest="verbose", default=False, action="store_true")
@@ -374,7 +382,7 @@ def main(args=None):
         duplist[:] = filterfalse(lambda g: all(a.type == ActionType.KEEP for a in g), duplist)
 
     if args.apply:
-        duplist.apply()
+        duplist.apply(args.dryrun)
 
     # Write output
     if args.out:

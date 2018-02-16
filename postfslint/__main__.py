@@ -199,7 +199,7 @@ def rule_specificity(actions):
     for i in range(len(actions) - 1):
         for j in range(i + 1, len(actions)):
             common = os.path.commonpath([dirnames[i], dirnames[j]])
-            if common and dirnames[i] != dirnames[j]:
+            if dirnames[i] != dirnames[j]:
                 if common == dirnames[i]:
                     if actions[i].type == ActionType.UNKNOWN:
                         actions[i].type = ActionType.DELETE

@@ -125,7 +125,7 @@ class DupGroup(object):
         if actions is not None:
             self.actions = actions
         else:
-            self.actions = [DupGroup(ActionType.UNKNOWN, path) for path in paths]
+            self.actions = [Action(ActionType.UNKNOWN, path) for path in paths]
 
     def annotate(self, rules):
         """Apply a set of rules to the actions
@@ -218,7 +218,7 @@ def rule_single(actions):
                 unknown = i
     if unknown is not None:
         # exactly one UNKNOWN
-        actions[unknown] = ActionType.KEEP
+        actions[unknown].type = ActionType.KEEP
         return False  # Done annotating
     # Multiple unknowns
     return True
@@ -261,7 +261,7 @@ class DupList(object):
         dupsection = "DUPlicate files"
         if dupsection not in sections:
             dupsection = None  # Fall back to top section
-        dups = [Action(ActionType.UNKNOWN, paths.split('\n')) for paths in "".join(sections[dupsection]).strip().split("\n\n")]
+        dups = [DupGroup(paths=paths.split('\n')) for paths in "".join(sections[dupsection]).strip().split("\n\n")]
         return dups
 
     def __init__(self, fslint=None, tsv=None):

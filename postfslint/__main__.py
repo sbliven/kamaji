@@ -3,7 +3,7 @@
 import re
 import os
 import sys
-from collections import OrderedDict
+from collections import OrderedDict, UserList
 import abc
 from enum import Enum
 import argparse
@@ -11,6 +11,7 @@ import logging
 import itertools
 from distutils import spawn  # for find_executable
 import subprocess
+from itertools import filterfalse
 
 
 def register_yaml(yaml):
@@ -116,16 +117,16 @@ class Action(object):
 
 
 
-class DupGroup(object):
+class DupGroup(UserList):
     """Group of duplicate files"""
 
     def __init__(self, actions=None, paths=None):
         if actions is None and paths is None:
             raise ValueError("Requires either actions or paths argument")
         if actions is not None:
-            self.actions = actions
+            super().__init__(actions)
         else:
-            self.actions = [Action(ActionType.UNKNOWN, path) for path in paths]
+            super().__init__(Action(ActionType.UNKNOWN, path) for path in paths)
 
     def annotate(self, rules):
         """Apply a set of rules to the actions
@@ -138,7 +139,7 @@ class DupGroup(object):
 
         """
         for rule in rules:
-            result = rule(self.actions)
+            result = rule(self)
             if not result:
                 break
         return self
@@ -150,22 +151,22 @@ class DupGroup(object):
         Returns: list of ActionType
 
         """
-        return [a.type for a in self.actions]
+        return [a.type for a in self]
 
     @property
     def paths(self):
         """Helper property to get the path for each Action in this group"""
-        return [a.path for a in self.actions]
+        return [a.path for a in self]
 
     def __repr__(self):
-        return "DupGroup({!r})".format(self.actions)
+        return "DupGroup({!r})".format(self)
 
     def __str__(self):
-        return "\n".join(str(a) for a in self.actions)
+        return "\n".join(str(a) for a in self)
 
     def apply(self):
         """Apply actions"""
-        for action in self.actions:
+        for action in self:
             allworked = True
             try:
                 allworked = allworked and action.apply()
@@ -228,7 +229,7 @@ def rule_single(actions):
 rules = (rule_toprint, rule_specificity, rule_single)
 
 
-class DupList(object):
+class DupList(UserList):
     @staticmethod
     def parse_fslint(file):
         """
@@ -269,7 +270,7 @@ class DupList(object):
         Args:
             - fslint (file-like): fslint output to parser
         """
-        self._dups = []
+        super().__init__()
         if fslint:
             self.read_fslint(fslint)
         if tsv:
@@ -277,7 +278,7 @@ class DupList(object):
 
     def read_fslint(self, fslint):
         sections = self.parse_fslint(fslint)
-        self._dups.extend(self.fslint_duplist(sections))
+        self.extend(self.fslint_duplist(sections))
 
     def read_tsv(self, tsv):
         """Read a tsv action file.
@@ -309,11 +310,11 @@ class DupList(object):
         if actions:
             dups.append(DupGroup(actions))
 
-        self._dups.extend(dups)
+        self.extend(dups)
 
     def __str__(self):
         """TSV-formatted string"""
-        return "\n\n".join(str(dup) for dup in self._dups)
+        return "\n\n".join(str(dup) for dup in self)
 
     def write(self, outfile):
         outfile.write("""# Actions:
@@ -325,14 +326,13 @@ class DupList(object):
         outfile.write(str(self))
 
     def annotate(self, rules):
-        for dup in self._dups:
+        for dup in self:
             dup.annotate(rules)
 
     def apply(self):
         """Apply actions"""
-        for dup in self._dups:
+        for dup in self:
             dup.apply()
-
 
 def main(args=None):
     parser = argparse.ArgumentParser(description='')
@@ -346,6 +346,8 @@ def main(args=None):
                         action="store_true", default=False)
     parser.add_argument("-o", "--out", help="write tsv of duplicates with suggested actions",
                         type=argparse.FileType('w'))
+    parser.add_argument("-K", "--nokeeps", help="Filter all-KEEP groups of duplicates",
+                        action="store_true", default=False)
     parser.add_argument("-v", "--verbose", help="Long messages",
         dest="verbose", default=False, action="store_true")
     args = parser.parse_args(args)
@@ -366,6 +368,10 @@ def main(args=None):
     if args.suggest:
         # Apply rules
         duplist.annotate(rules)
+
+    if args.nokeeps:
+        # Filter out all=KEEP groups
+        duplist[:] = filterfalse(lambda g: all(a.type == ActionType.KEEP for a in g), duplist)
 
     if args.apply:
         duplist.apply()

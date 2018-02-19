@@ -6,6 +6,7 @@ from .postfslint import ActionType, DupList
 from . import rules
 from itertools import filterfalse
 
+
 def main(args=None):
     parser = argparse.ArgumentParser(description='')
     parser.add_argument("-f", "--fslint", help="fslint file to parse",

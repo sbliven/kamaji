@@ -4,15 +4,17 @@ import sys
 import re
 
 
-def rule_keep_dup(pattern, newtype=ActionType.KEEP, flags=re.I):
+def rule_re(pattern, newtype=ActionType.KEEP, flags=re.I):
     """Marks files if any of their parent directories match a regular expression
 
     Args:
         - pattern (str): regular expression, matched against each directory in the action's path
         - newtype (ActionType): type to set upon matching (default: KEEP)
         - flags (int): regular expression flags (default: re.IGNORECASE)
-    
-    Returns: (list of Action -> bool) A rule function, which when evaluated on a list of rules KEEPs any paths matching the pattern
+
+    Returns: (list of Action -> bool)
+        A rule function, which when evaluated on a list of rules KEEPs any paths matching the pattern
+
     """
     def rule(actions):
         # compile regular expression
@@ -21,10 +23,11 @@ def rule_keep_dup(pattern, newtype=ActionType.KEEP, flags=re.I):
         for action in actions:
             if action.type == ActionType.UNKNOWN:
                 for action in actions:
-                    if action.type == ActionType.UNKNOWN and patt.match(action.path):
+                    if action.type == ActionType.UNKNOWN and patt.search(action.path):
                         action.type = newtype
         return True
     return rule
+
 
 def rule_specificity(actions):
     """
@@ -68,8 +71,7 @@ def rule_single(actions):
 
 # All rules
 defaultrules = (
-        rule_keep_dup("print|phone|sdcard|rsync|iphoto"),
-        rule_keep_dup("^Unsorted", ActionType.DELETE),
+        rule_re("print|phone|sdcard|rsync|iphoto"),
+        rule_re("^Unsorted", ActionType.DELETE),
         rule_specificity,
         rule_single)
-

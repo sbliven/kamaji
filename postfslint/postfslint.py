@@ -113,7 +113,6 @@ class Action(object):
             raise Exception("Unimplemented Action")
 
 
-
 class DupGroup(UserList):
     """Group of duplicate files"""
 
@@ -169,6 +168,7 @@ class DupGroup(UserList):
                 allworked = allworked and action.apply(dryrun)
             except Exception as ex:
                 logging.error(ex)
+
 
 class DupList(UserList):
     @staticmethod
@@ -274,5 +274,3 @@ class DupList(UserList):
         """Apply actions"""
         for dup in self:
             dup.apply(dryrun)
-
-

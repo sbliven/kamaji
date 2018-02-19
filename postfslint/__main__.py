@@ -52,7 +52,13 @@ def main(args=None):
 
     # Write output
     if args.out:
-        duplist.write(args.out)
+        try:
+            duplist.write(args.out)
+        except BrokenPipeError as ex:
+            pass  # piping is fine
+        except IOError as ex:
+            logging.error(ex)
+            sys.exit(1)
 
 
 if __name__ == "__main__":

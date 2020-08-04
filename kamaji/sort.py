@@ -55,7 +55,7 @@ class PhotoSorter:
         - CalledProcessError: error running exiftool
         """
         cmd = [EXIFTOOL, img]
-        output = subprocess.check_output(cmd)
+        output = subprocess.check_output(cmd, universal_newlines=True)
         lines = output.split("\n")
         datere = re.compile("^([^:]*date[^:]*): ([0-9]{4}):([0-9][0-9]?):.*$", re.I)
         dates: Set[Tuple[str, str]] = set()
@@ -64,7 +64,7 @@ class PhotoSorter:
                 match = datere.match(l)
                 if match:
                     if match.group(1).strip() == "Create Date":
-                        dates.add(match.groups()[1:3])
+                        dates.add((match.group(2),match.group(3)))
         return dates
 
     def sortphotos(self, src: str, dst: str):

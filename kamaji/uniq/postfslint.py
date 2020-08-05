@@ -21,13 +21,19 @@ class ActionType(Enum):
 
 # OS-specific delete function
 if spawn.find_executable("trash"):
+
     def delete(path):
         logging.info("Trashing %s", path)
-        result = subprocess.check_call(["trash", path], stdout=sys.stdout, stderr=sys.stderr)
+        result = subprocess.check_call(
+            ["trash", path], stdout=sys.stdout, stderr=sys.stderr
+        )
         if result != 0:
             logging.error("Trashing {} returned {}", path, result)
         return True
+
+
 else:
+
     def delete(path):
         logging.info("Deleting %s", path)
         os.remove(path)
@@ -83,7 +89,7 @@ class Action(object):
         Throws (ValueError) for invalid formatting.
 
         """
-        fields = line.split('\t')
+        fields = line.split("\t")
         return Action(*fields)
 
     def apply(self, dryrun=False):
@@ -98,7 +104,9 @@ class Action(object):
 
         # Test path exists
         if not os.path.isfile(self.path):
-            raise IOError("Unable to %s '%s' (file not found)" % (self.type.name, self.path))
+            raise IOError(
+                "Unable to %s '%s' (file not found)" % (self.type.name, self.path)
+            )
         if self.type is ActionType.DELETE:
             if dryrun:
                 logging.info("Deleting %s", self.path)
@@ -185,7 +193,7 @@ class DupList(UserList):
         sectionname = None
         section = []
         for line in lines:
-            match = re.match('-{5,}(.*)\n?', line)
+            match = re.match("-{5,}(.*)\n?", line)
             if match:
                 # new section
                 if section or sectionname:
@@ -203,7 +211,10 @@ class DupList(UserList):
         dupsection = "DUPlicate files"
         if dupsection not in sections:
             dupsection = None  # Fall back to top section
-        dups = [DupGroup(paths=paths.split('\n')) for paths in "".join(sections[dupsection]).strip().split("\n\n")]
+        dups = [
+            DupGroup(paths=paths.split("\n"))
+            for paths in "".join(sections[dupsection]).strip().split("\n\n")
+        ]
         return dups
 
     def __init__(self, fslint=None, tsv=None):
@@ -258,12 +269,14 @@ class DupList(UserList):
         return "\n\n".join(str(dup) for dup in self)
 
     def write(self, outfile):
-        outfile.write("""# Actions:
+        outfile.write(
+            """# Actions:
 # K\tsrc\t\tKeep the file
 # D\tsrc\t\tDelete the file
 # R\tsrc\tdst\tRename the file to `dst`
 # ?\tsrc\t\tUnknown - keep file as is
-""")
+"""
+        )
         outfile.write(str(self))
 
     def annotate(self, rules):

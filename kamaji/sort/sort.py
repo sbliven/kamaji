@@ -64,7 +64,7 @@ class PhotoSorter:
                 match = datere.match(l)
                 if match:
                     if match.group(1).strip() == "Create Date":
-                        dates.add((match.group(2),match.group(3)))
+                        dates.add((match.group(2), match.group(3)))
         return dates
 
     def sortphotos(self, src: str, dst: str):
@@ -121,7 +121,7 @@ class PhotoSorter:
 
             # Get list of photo dates for each group
             for base, exts in filegroups.items():
-                dates: Set[Tuple[str,str]] = set()
+                dates: Set[Tuple[str, str]] = set()
                 for ext in exts:
                     if ext.lower() in photo_ext:
                         dates.update(self.getEXIF(join(dirpath, base + ext)))

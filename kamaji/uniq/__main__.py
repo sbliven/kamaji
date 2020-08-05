@@ -1,33 +1,53 @@
 #!/usr/bin/env python
 import sys
-import argparse
+import click
 import logging
 from .postfslint import ActionType, DupList
 from . import rules
 from itertools import filterfalse
 
 
-def main(args=None):
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument("-f", "--fslint", help="fslint file to parse",
-                        type=argparse.FileType('r'))
-    parser.add_argument("-t", "--tsv", help="read tsv of duplicates with annotated actions",
-                        type=argparse.FileType('r'))
-    parser.add_argument("-s", "--suggest", help="apply suggestion rules",
-                        action="store_true", default=False)
-    parser.add_argument("-a", "--apply", help="apply actions",
-                        action="store_true", default=False)
-    parser.add_argument("-o", "--out", help="write tsv of duplicates with suggested actions",
-                        type=argparse.FileType('w'))
-    parser.add_argument("-K", "--nokeeps", help="Filter all-KEEP groups of duplicates",
-                        action="store_true", default=False)
-    parser.add_argument("-n", "--dryrun", help="with --apply, don't actually do anything but just print log statements",
-                        action="store_true", default=False)
-    parser.add_argument("-v", "--verbose", help="Long messages",
-        dest="verbose", default=False, action="store_true")
-    args = parser.parse_args(args)
+@click.command()
+@click.option("-f", "--fslint", help="fslint file to parse", type=click.File("r"))
+@click.option(
+    "-t",
+    "--tsv",
+    help="read tsv of duplicates with annotated actions",
+    type=click.File("r"),
+)
+@click.option(
+    "-s", "--suggest", help="apply suggestion rules", is_flag=True, default=False
+)
+@click.option("-a", "--apply", help="apply actions", is_flag=True, default=False)
+@click.option(
+    "-o",
+    "--out",
+    help="write tsv of duplicates with suggested actions",
+    type=click.File("w"),
+)
+@click.option(
+    "-K",
+    "--no-keeps",
+    help="Filter all-KEEP groups of duplicates",
+    is_flag=True,
+    default=False,
+)
+@click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Do not actually perform file moves",
+)
+@click.option("-v", "--verbose", is_flag=True, help="Verbose logging")
+@click.help_option("-h", "--help")
+def main(fslint, tsv, apply, out, no_keeps, dry_run, verbose):
+    "Deal with duplicate images"
 
-    logging.basicConfig(format='%(levelname)s: %(message)s', level=logging.DEBUG if args.verbose else logging.INFO)
+    logging.basicConfig(
+        format="%(levelname)s: %(message)s",
+        level=logging.DEBUG if args.verbose else logging.INFO,
+    )
 
     # input
     if not (args.fslint or args.tsv):
@@ -46,7 +66,9 @@ def main(args=None):
 
     if args.nokeeps:
         # Filter out all=KEEP groups
-        duplist[:] = filterfalse(lambda g: all(a.type == ActionType.KEEP for a in g), duplist)
+        duplist[:] = filterfalse(
+            lambda g: all(a.type == ActionType.KEEP for a in g), duplist
+        )
 
     if args.apply:
         duplist.apply(args.dryrun)

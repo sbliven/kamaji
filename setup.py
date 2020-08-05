@@ -44,7 +44,12 @@ setup(
     ],
     keywords="photo organization directory management duplicates utility deduplication",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
-    install_requires=[],
+    install_requires=["click >= 7"],
     setup_requires=["pytest-runner >= 2"],
     tests_require=["pytest >= 3", "tox >= 3", "flake8 >= 3"],
+    python_requires=">=3.6",
+    entry_points="""
+        [console_scripts]
+        kamaji=kamaji.__main__:main
+    """,
 )

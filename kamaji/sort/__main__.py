@@ -1,46 +1,44 @@
-import argparse
+import click
 import logging
 from .sort import PhotoSorter
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description="Sort images by year and month")
-    parser.add_argument("src", metavar="src", help="Source directory for images")
-    parser.add_argument(
-        "dst",
-        metavar="dst",
-        default=None,
-        help="Destination directory for images. Default:src",
-    )
-    parser.add_argument(
-        "-r",
-        "--recursive",
-        default=False,
-        action="store_true",
-        help="Recurse into subdirectories, preserving the input directory structure while splitting by date",
-    )
-    parser.add_argument(
-        "-y",
-        "--dry-run",
-        default=False,
-        action="store_true",
-        help="Do not actually perform file moves",
-    )
-    parser.add_argument(
-        "-v",
-        "--verbose",
-        default=logging.WARN,
-        action="store_const",
-        dest="logLevel",
-        const=logging.DEBUG,
-    )
+@click.command()
+@click.argument(
+    "src",
+    # help="Source directory for images",
+    type=click.Path(exists=True, file_okay=False),
+)
+@click.argument(
+    "dst",
+    # help="Destination directory for images. Default:src",
+    default=None,
+    type=click.Path(file_okay=False),
+)
+@click.option(
+    "-r",
+    "--recursive",
+    is_flag=True,
+    default=False,
+    help="Recurse into subdirectories, preserving the input directory structure while splitting by date",
+)
+@click.option(
+    "-n",
+    "--dry-run",
+    is_flag=True,
+    default=False,
+    help="Do not actually perform file moves",
+)
+@click.option("-v", "--verbose", is_flag=True, help="Verbose logging")
+@click.help_option("-h", "--help")
+def main(src, dst, recursive, dry_run, verbose):
+    "Sort images by year and month"
 
-    args = parser.parse_args(argv)
+    log_level = logging.DEBUG if verbose else logging.WARN
+    logging.basicConfig(level=log_level)  # , format="%(message)s")
 
-    logging.basicConfig(level=args.logLevel)  # , format="%(message)s")
-
-    sorter = PhotoSorter(recursive=args.recursive, dry_run=args.dry_run)
-    sorter.sortphotos(args.src, args.dst)
+    sorter = PhotoSorter(recursive=recursive, dry_run=dry_run)
+    sorter.sortphotos(src, dst)
 
 
 if __name__ == "__main__":

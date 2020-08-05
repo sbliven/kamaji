@@ -27,10 +27,10 @@ Next, install the package:
 
 ## Running
 
-It can then be run as a python module:
+It can then be run as a python module or using the `kamaji` command:
 
-    python -m kamaji.sort -h
-    python -m kamaji.uniq -h
+    kamaji --help
+    python -m kamaji --help
 
 
 ## Examples
@@ -38,11 +38,11 @@ It can then be run as a python module:
 Parse output of fslint or findup into a TSV file. Don't list groups of duplicates
 if they all pass 'KEEP' rules.
 
-    python -m kamaji.uniq -f duplicates.fsdup -s -o duplicates.tsv -K
+    kamaji uniq -f duplicates.fsdup -s -o duplicates.tsv -K
 
 This TSV file can be checked over and edited if needed. Then, to apply changes:
 
-    python -m kamaji.uniq -a -t duplicates.tsv
+    kamaji uniq -a -t duplicates.tsv
 
 
 ## License

@@ -16,9 +16,10 @@ def rule_re(pattern, newtype=ActionType.KEEP, flags=re.I):
         A rule function, which when evaluated on a list of rules KEEPs any paths matching the pattern
 
     """
+
     def rule(actions):
         # compile regular expression
-        patt = pattern if hasattr('match', pattern) else re.compile(pattern, flags)
+        patt = pattern if hasattr("match", pattern) else re.compile(pattern, flags)
 
         for action in actions:
             if action.type == ActionType.UNKNOWN:
@@ -26,6 +27,7 @@ def rule_re(pattern, newtype=ActionType.KEEP, flags=re.I):
                     if action.type == ActionType.UNKNOWN and patt.search(action.path):
                         action.type = newtype
         return True
+
     return rule
 
 
@@ -71,7 +73,8 @@ def rule_single(actions):
 
 # All rules
 defaultrules = (
-        rule_re("print|phone|sdcard|rsync|iphoto"),
-        rule_re("^Unsorted", ActionType.DELETE),
-        rule_specificity,
-        rule_single)
+    rule_re("print|phone|sdcard|rsync|iphoto"),
+    rule_re("^Unsorted", ActionType.DELETE),
+    rule_specificity,
+    rule_single,
+)

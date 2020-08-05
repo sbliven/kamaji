@@ -42,7 +42,7 @@ setup(
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
     ],
-    keywords="photo organization directory management",
+    keywords="photo organization directory management duplicates utility deduplication",
     packages=find_packages(exclude=["contrib", "docs", "tests"]),
     install_requires=[],
     setup_requires=["pytest-runner >= 2"],
